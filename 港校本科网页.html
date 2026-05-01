@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港校本科申请潮：内地学生为何选择香港八大</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; scroll-behavior: smooth; }
+        
+        :root {
+            --primary: #0a2540;
+            --accent: #2b6e9e;
+            --accent-light: #4a90b8;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #1e2a3a;
+            --text-secondary: #5e7a93;
+            --border: #e2e8f0;
+            --shadow: 0 4px 24px rgba(10,37,64,0.08);
+            --shadow-hover: 0 8px 32px rgba(10,37,64,0.12);
+        }
+        
+        body { 
+            background: var(--bg); 
+            font-family: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif; 
+            line-height:1.7; 
+            color: var(--text); 
+            padding: 0;
+            font-size: 16px;
+        }
+        
+        /* ========== 顶部阅读进度条 ========== */
+        #reading-progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(43,110,158,0.12);
+            z-index: 1000;
+        }
+        #reading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #00a8a8);
+            transition: width 0.1s ease-out;
+        }
+        
+        /* ========== 大屏：右侧环形进度面板 ========== */
+.side-progress {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%) translateX(20px);
+    width: 200px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(10,37,64,0.15);
+    padding: 28px 22px;
+    z-index: 999;
+    border: 1px solid var(--border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.side-progress.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) translateX(0);
+}
+.side-progress h4 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.progress-ring-item {
+    margin-bottom: 20px;
+    text-align: center;
+}
+.progress-ring {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 10px;
+    position: relative;
+}
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+.progress-ring-bg {
+    fill: none;
+    stroke: #eef2f5;
+    stroke-width: 6;
+}
+.progress-ring-fill {
+    fill: none;
+    stroke: url(#ringGradient);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 220;
+    stroke-dashoffset: 220;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-ring-fill.complete {
+    stroke: url(#ringGradientComplete);
+}
+.progress-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+.progress-ring-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ========== 中屏：左上角迷你面板 ========== */
+.side-progress-mini {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(10,37,64,0.12);
+    padding: 12px 16px;
+    z-index: 999;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.side-progress-mini.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.mini-ring {
+    width: 44px;
+    height: 44px;
+    position: relative;
+    flex-shrink: 0;
+}
+.mini-ring svg {
+    transform: rotate(-90deg);
+}
+.mini-ring .progress-ring-bg {
+    stroke-width: 3;
+}
+.mini-ring .progress-ring-fill {
+    stroke-width: 3;
+    stroke-dasharray: 113; /* 2*pi*18 */
+}
+.mini-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+.mini-info {
+    line-height: 1.4;
+}
+.mini-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+.mini-detail {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* ========== 小屏：底部浮动进度条 ========== */
+.bottom-progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--card-bg);
+    padding: 10px 20px;
+    z-index: 999;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(10,37,64,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.bottom-progress.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.bottom-track {
+    flex: 1;
+    height: 6px;
+    background: #eef2f5;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.bottom-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), #00a8a8);
+    border-radius: 3px;
+    transition: width 0.2s ease-out;
+}
+.bottom-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 40px;
+    text-align: right;
+}
+
+/* ========== 响应式显示规则 ========== */
+/* 大屏：显示右侧面板，隐藏其他 */
+@media (min-width: 1300px) {
+    .side-progress-mini { display: none !important; }
+    .bottom-progress { display: none !important; }
+}
+
+/* 中屏：显示迷你面板，隐藏其他 */
+@media (max-width: 1299px) and (min-width: 768px) {
+    .side-progress { display: none !important; }
+    .bottom-progress { display: none !important; }
+}
+
+/* 小屏：显示底部条，隐藏其他 */
+@media (max-width: 767px) {
+    .side-progress { display: none !important; }
+    .side-progress-mini { display: none !important; }
+}
+        
+        /* ========== 封面区域 ========== */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 680px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a2540 0%, #1a4a6e 50%, #2b6e9e 100%);
+        }
+        .hero-bg-pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.06;
+            background-image: 
+                radial-gradient(circle at 25% 50%, rgba(255,255,255,0.4) 1px, transparent 1px),
+                radial-gradient(circle at 75% 50%, rgba(255,255,255,0.4) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .hero-image-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 1;
+            /*filter: saturate(0.7) contrast(1.15);*/
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, 
+            rgba(10,37,64,0.3) 0%, 
+            rgba(10,37,64,0.6) 100%);
+            /*display: none;*/
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 50px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            width: fit-content;
+            letter-spacing: 0.5px;
+        }
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 30px rgba(0,0,0,0.35);
+            max-width: 1050px;
+            letter-spacing: -0.5px;
+        }
+        .hero-caption {
+            font-size: 1.05rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+            max-width: 650px;
+            font-weight: 400;
+        }
+        .hero-caption strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section { height: 500px; }
+            .hero-title { font-size: 2rem; }
+            .hero-content { padding: 0 20px; padding-bottom: 40px; }
+        }
+        
+        /* ========== 主内容区 ========== */
+        .main-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 56px 40px 80px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 48px;
+        }
+        .content-area {
+            min-width: 0;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+                padding: 36px 20px 60px;
+            }
+        }
+        
+        /* ========== 新闻叙事模块 ========== */
+        .narrative-module {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 44px;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        .narrative-module::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--accent), var(--accent-light));
+        }
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .module-number {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(43,110,158,0.3);
+        }
+        .module-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .plain-text {
+            font-size: 1.1rem;
+            margin: 22px 0;
+            text-align: justify;
+            color: var(--text);
+            line-height: 1.9;
+        }
+        .plain-text:first-child { margin-top: 0; }
+        .plain-text:last-child { margin-bottom: 0; }
+        
+        .quote-block {
+            background: linear-gradient(135deg, #f8fafc, #f0f4f8);
+            border-left: 4px solid var(--accent);
+            padding: 28px 32px;
+            margin: 28px 0;
+            border-radius: 0 16px 16px 0;
+            position: relative;
+        }
+        .quote-block::before {
+            content: '"';
+            position: absolute;
+            top: 12px;
+            left: 20px;
+            font-size: 3.5rem;
+            color: var(--accent);
+            opacity: 0.15;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .quote-text {
+            font-size: 1.05rem;
+            color: var(--text);
+            line-height: 1.85;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+        .quote-source {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* ========== 图表容器 ========== */
+        .chart-module {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 36px;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .chart-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(43,110,158,0.25);
+        }
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .chart-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+        .chart-wrapper { 
+            width:100%; 
+            height:520px; 
+            margin:0 auto; 
+        }
+        .chart-caption { 
+            text-align:center; 
+            font-size:0.85rem; 
+            color: var(--text-secondary); 
+            margin-top:18px; 
+            padding-top:14px; 
+            border-top:1px dashed var(--border);
+        }
+        .chart-caption a { 
+            color: var(--accent); 
+            text-decoration:none; 
+            border-bottom:1px dotted; 
+            transition: color 0.2s;
+        }
+        .chart-caption a:hover { color: var(--primary); }
+        
+        /* 雷达图专用 */
+        .radar-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .radar-wrapper { padding: 28px 24px 8px; }
+        #radarChart { width: 100%; height: 720px; }
+        .radar-footer {
+            padding: 18px 32px 28px;
+            border-top: 1px solid var(--border);
+            background: var(--card-bg);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+        }
+        .stats-note {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            background: var(--bg);
+            padding: 10px 20px;
+            border-radius: 40px;
+        }
+        .stats-note span {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .stats-note strong {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .data-link {
+            font-size: 0.9rem;
+        }
+        .data-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            background: var(--bg);
+            padding: 8px 18px;
+            border-radius: 60px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .data-link a:hover {
+            background: #e2ecf3;
+            color: var(--primary);
+        }
+        
+        /* ========== 因素列表模块 ========== */
+        .factor-module {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 44px;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .factor-item {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .factor-item:last-child { border-bottom: none; }
+        .factor-item strong {
+            display: block;
+            font-size: 1.15rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .factor-item strong::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+        .factor-item p {
+            font-size: 1.05rem;
+            color: var(--text);
+            line-height: 1.85;
+            padding-left: 22px;
+        }
+        
+        /* ========== 右侧边栏 ========== */
+        .sidebar {
+            position: sticky;
+            top: 40px;
+            height: fit-content;
+        }
+        .sidebar-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .sidebar-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--accent);
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .sidebar-item:last-child { border-bottom: none; }
+        .sidebar-item:hover {
+            background: var(--bg);
+            margin: 0 -12px;
+            padding: 14px 12px;
+            border-radius: 12px;
+            border-bottom-color: transparent;
+        }
+        .sidebar-item:hover + .sidebar-item {
+            border-top: 1px solid var(--border);
+        }
+        .sidebar-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .sidebar-item:hover .sidebar-icon {
+            transform: scale(1.1);
+        }
+        .sidebar-text {
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .sidebar-text strong {
+            display: block;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 3px;
+        }
+        
+        .key-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 8px;
+        }
+        .stat-box {
+            background: var(--bg);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10,37,64,0.08);
+        }
+        .stat-number {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        /* ========== 页脚 ========== */
+        footer { 
+            text-align:center; 
+            padding: 40px 20px; 
+            color: var(--text-secondary); 
+            font-size:0.85rem; 
+            border-top:1px solid var(--border);
+            background: var(--card-bg);
+        }
+        
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            .hero-section { height: 480px; }
+            .hero-title { font-size: 1.8rem; }
+            .narrative-module, .chart-module, .factor-module { padding: 28px 24px; }
+            .chart-wrapper { height: 420px; }
+            #radarChart { height: 560px; }
+            .radar-footer { flex-direction: column; align-items: flex-start; }
+            .stats-note { gap: 12px; }
+        }
+        
+        /* 滚动动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- SVG渐变定义（用于进度环） -->
+<svg width="0" height="0" style="position:absolute;">
+    <defs>
+        <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2b6e9e" />
+            <stop offset="100%" stop-color="#4a90b8" />
+        </linearGradient>
+        <linearGradient id="ringGradientComplete" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00a8a8" />
+            <stop offset="100%" stop-color="#2c7a47" />
+        </linearGradient>
+    </defs>
+</svg>
+
+<!-- 顶部阅读进度条 -->
+<div id="reading-progress-container">
+    <div id="reading-progress-bar"></div>
+</div>
+
+<!-- 大屏：右侧环形进度面板 -->
+<div class="side-progress" id="sideProgress">
+    <h4>📖 阅读进度</h4>
+    <div class="progress-ring-item">
+        <div class="progress-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle class="progress-ring-bg" cx="40" cy="40" r="35"/>
+                <circle class="progress-ring-fill" id="overallRing" cx="40" cy="40" r="35"/>
+            </svg>
+            <div class="progress-ring-text" id="overallRingText">0%</div>
+        </div>
+        <div class="progress-ring-label">整体进度</div>
+    </div>
+    <div class="progress-ring-item">
+        <div class="progress-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle class="progress-ring-bg" cx="40" cy="40" r="35"/>
+                <circle class="progress-ring-fill" id="chartRing" cx="40" cy="40" r="35"/>
+            </svg>
+            <div class="progress-ring-text" id="chartRingText">0/4</div>
+        </div>
+        <div class="progress-ring-label">数据图表</div>
+    </div>
+    <div class="progress-ring-item">
+        <div class="progress-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle class="progress-ring-bg" cx="40" cy="40" r="35"/>
+                <circle class="progress-ring-fill" id="moduleRing" cx="40" cy="40" r="35"/>
+            </svg>
+            <div class="progress-ring-text" id="moduleRingText">0/6</div>
+        </div>
+        <div class="progress-ring-label">内容模块</div>
+    </div>
+</div>
+
+<!-- 中屏：左上角迷你面板 -->
+<div class="side-progress-mini" id="sideProgressMini">
+    <div class="mini-ring">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle class="progress-ring-bg" cx="22" cy="22" r="18" stroke-width="3"/>
+            <circle class="progress-ring-fill" id="miniRing" cx="22" cy="22" r="18" stroke-width="3"/>
+        </svg>
+        <div class="mini-ring-text" id="miniRingText">0%</div>
+    </div>
+    <div class="mini-info">
+        <div class="mini-label">阅读进度</div>
+        <div class="mini-detail" id="miniDetail">图表 0/4 · 模块 0/6</div>
+    </div>
+</div>
+
+<!-- 小屏：底部浮动进度条 -->
+<div class="bottom-progress" id="bottomProgress">
+    <div class="bottom-track">
+        <div class="bottom-fill" id="bottomFill"></div>
+    </div>
+    <div class="bottom-text" id="bottomText">0%</div>
+</div>
+
+<!-- ========== 封面区域 ========== -->
+<section class="hero-section" id="hero">
+    <div class="hero-bg-pattern"></div>
+    <div class="hero-image-container">
+        <!-- 浸会大学校园图片 -->
+        <img src="images/11.jpg" 
+            alt="香港浸会大学校园" 
+             onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #0a2540 0%, #1a4a6e 50%, #2b6e9e 100%)';">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">港校本科申请潮：内地学生为何选择香港八大</h1>
+        <p class="hero-caption">
+            <strong>（港浸会逾万份内地本科生入学申请。图为香港浸会大学校园。）</strong>
+        </p>
+    </div>
+</section>
+
+<!-- ========== 主内容区 ========== -->
+<div class="main-wrapper">
+    <div class="content-area">
+        
+        <!-- 模块1：趋势概览 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-trend">
+            <div class="module-header">
+                <div class="module-number">01</div>
+                <div class="module-title">趋势概览：内地生赴港人数五年攀升</div>
+            </div>
+            <div class="plain-text">
+                据香港八大院校公开数据，近五年香港八大内地本科生人数持续增长，越来越多的内地学生选择赴港就读本科。
+            </div>
+        </div>
+
+        <!-- 图表1：折线图 -->
+        <div class="chart-module fade-in" data-section="chart" id="chart-line">
+            <div class="chart-header">
+                <div class="chart-header-left">
+                    <div class="chart-icon">📈</div>
+                    <div>
+                        <div class="chart-title">八大院校内地本科生入学趋势</div>
+                        <div class="chart-subtitle">2020/21 – 2024/25 学年</div>
+                    </div>
+                </div>
+            </div>
+            <div id="trend-line-chart" class="chart-wrapper"></div>
+            <div class="chart-caption">
+                📊 数据来源：<a href="https://www.kdocs.cn/l/ccDdKjqmojzE" target="_blank">点击查看原始Excel数据文件（入学人数统计，2020/21–2024/25学年）</a>
+            </div>
+        </div>
+
+        <!-- 模块2：政策解读 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-policy">
+            <div class="module-header">
+                <div class="module-number">02</div>
+                <div class="module-title">政策解读：招生上限持续放宽</div>
+            </div>
+            <div class="plain-text">
+                香港优化内地本科招生政策，是内地赴港就读本科人数上升的重要推动因素。
+            </div>
+            <div class="plain-text">
+                2023 年香港特区发布施政报告，自 2024/25 学年起，政府资助专上院校的非本地生招生上限上调至本地学额的 40%。2025 年施政报告进一步提出，由 2026/27 学年起，将非本地自费学生的招生上限提升至本地学额的 50%。
+            </div>
+        </div>
+
+        <!-- 图表2：堆叠柱状图 -->
+        <div class="chart-module fade-in" data-section="chart" id="chart-stacked">
+            <div class="chart-header">
+                <div class="chart-header-left">
+                    <div class="chart-icon">📊</div>
+                    <div>
+                        <div class="chart-title">本地与非本地学生构成变化</div>
+                        <div class="chart-subtitle">政策调整下的生源结构演变</div>
+                    </div>
+                </div>
+            </div>
+            <div id="policy-stacked-bar" class="chart-wrapper" style="height:520px;"></div>
+            <div class="chart-caption">
+                📊 数据来源：<a href="https://www.kdocs.cn/l/ccDdKjqmojzE" target="_blank">点击查看原始Excel数据文件（入学人数统计，2020/21–2024/25学年）</a>
+            </div>
+        </div>
+
+        <!-- 模块3：个案访谈 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-case">
+            <div class="module-header">
+                <div class="module-number">03</div>
+                <div class="module-title">个案访谈：扩招政策的受益者</div>
+            </div>
+            <div class="plain-text">
+                政策的持续调整，推动香港高校扩大内地招生规模，同时促使院校增设全新专业，为分数条件有限的内地学生，提供了更多赴港就读本科的机会。
+            </div>
+            <div class="quote-block">
+                <div class="quote-text">
+                    按照工商管理专业往年的录取要求，我的高考成绩还差30至50分。今年港校扩招政策正式落地，我留意到浸会开设了全新专业，录取门槛相对更低，我也因此压线被录取。浸会大学一直是我的理想院校，以我的分数水平，仅能报考该校这一新设专业。我能够成功入读，大部分原因都要归功于扩招政策。
+                </div>
+                <!-- 丁悦然照片 -->
+<div style="margin: 28px auto; text-align: center;">
+    <img src="images/22.jpg" 
+         alt="丁悦然 香港浸会大学" 
+         style="width: 100%; max-width: 640px; height: auto; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);">
+</div>
+                <div class="quote-source">—— 丁悦然，香港浸会大学工商管理全球娱乐专业内地本科生</div>
+            </div>
+        </div>
+
+        <!-- 模块4：调研分析 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-survey">
+            <div class="module-header">
+                <div class="module-number">04</div>
+                <div class="module-title">调研分析：赴港就读的驱动因素</div>
+            </div>
+            <div class="plain-text">
+                多重现实因素，也推动内地学生选择香港高校。
+            </div>
+            <div class="plain-text">
+                本次面向内地赴港本科生的专项问卷调查，共回收有效样本 107 份，下图呈现了影响学生选择赴港就读本科的各项因素的影响程度分布情况。
+            </div>
+        </div>
+
+        <!-- 雷达图 -->
+        <div class="radar-card fade-in" data-section="chart" id="chart-radar">
+            <div class="radar-wrapper">
+                <div id="radarChart"></div>
+            </div>
+            <div class="radar-footer">
+                <div class="stats-note">
+                    <span>📋 <strong>样本量</strong> N = 107 份</span>
+                    <span>📊 <strong>评分尺度</strong> 1 = 完全无影响  →  5 = 关键性决定因素</span>
+                </div>
+                <div class="data-link">
+                    📊 数据来源：<a href="https://pubref.paperol.cn/clientdown/359177251/359177251_1777557365mCc6ZE.xlsx" target="_blank" rel="noopener noreferrer">
+                        📎 原始问卷数据 (Excel)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模块5：深度分析 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-analysis">
+            <div class="module-header">
+                <div class="module-number">05</div>
+                <div class="module-title">深度分析：四大核心驱动力</div>
+            </div>
+            <div class="plain-text">
+                基于本次调研的数据，可对内地学生选择赴港就读的因素展开分析。
+            </div>
+        </div>
+
+        <!-- 因素列表 -->
+        <div class="factor-module fade-in" data-section="text" id="module-factors">
+            <div class="factor-item">
+                <strong>1. 较低门槛与成本优势</strong>
+                <p>香港就读本科性价比更高、环境安全，是内地学生的优选。据香港八大院校 2026/27 学年官方公示，港校非本地本科生年度学费区间为 17.5 万至 24.9 万港币，对比英美顶尖院校，整体学费更低。与此同时，依托 "一国两制" 优势，港校学历全球认可，能够有效降低海外政策变动带来的不确定风险。</p>
+            </div>
+            <div class="factor-item">
+                <strong>2. 就业发展空间广阔</strong>
+                <p>港校具备国际化培养模式，依托香港本地及粤港澳大湾区的校招资源，可为学生提供丰富的实习与就业渠道。凭借较高的社会认可度，港校本科文凭的就业竞争力突出，成为内地学生择校的原因之一。</p>
+            </div>
+            <div class="factor-item">
+                <strong>3. 永居身份的政策红利</strong>
+                <p>港校本科毕业生可申请 IANG 非本地毕业生留港签证，在港居住满七年还可申领香港永久身份。相关的配套政策，受到众多学生及家长的关注与重视。</p>
+            </div>
+            <div class="factor-item">
+                <strong>4. 综合学术实力突出</strong>
+                <p>香港高校整体排名稳居国际前列，教育质量广受认可。在 2026 年泰晤士高等教育亚洲大学排名中，香港八所资助院校全部进入亚洲百强。其中，香港大学、香港中文大学位列亚洲前十；香港教育大学、岭南大学首次上榜，分别排名第 37 位、第 84 位；香港浸会大学升至第 40 位。香港高校整体实力稳步提升，持续吸引内地生源。</p>
+            </div>
+        </div>
+
+        <!-- 模块6：毕业去向 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-career">
+            <div class="module-header">
+                <div class="module-number">06</div>
+                <div class="module-title">毕业去向：多元化的发展路径</div>
+            </div>
+            <div class="plain-text">
+                在多重现实因素的影响下，内地在港本科生的毕业发展选择更趋多元。以香港大学 2024 届非本地毕业生的去向数据为例，可呈现相关毕业发展路径的分布情况。部分学生计划毕业后留港就业发展，部分学生倾向返回内地寻求工作或深造机会，还有一部分学生则以港校本科学历为依托，申请海外院校继续深造。
+            </div>
+        </div>
+
+        <!-- 图表4：桑基图 -->
+        <div class="chart-module fade-in" data-section="chart" id="chart-sankey">
+            <div class="chart-header">
+                <div class="chart-header-left">
+                    <div class="chart-icon">🌐</div>
+                    <div>
+                        <div class="chart-title">港大2024届非本地毕业生去向分布</div>
+                        <div class="chart-subtitle">就业与深造流向桑基图</div>
+                    </div>
+                </div>
+            </div>
+            <div id="sankey-chart" class="chart-wrapper" style="height:520px;"></div>
+            <div class="chart-caption">
+                📊 数据来源：<a href="https://www.cedars.hku.hk/index.php?route=information/download&hash=8c7b13271bb0416a858a1b2232c6709f" target="_blank">🔗 香港大学2024届本科毕业生就业调查报告 (官方PDF)</a>
+            </div>
+        </div>
+
+        <!-- 结语 -->
+        <div class="narrative-module fade-in" data-section="text" id="module-conclusion">
+            <div class="plain-text">
+                内地赴港就读本科人数上升，是现实条件与发展机遇共同作用的结果。对于选择港校的内地学生而言，这既是升学途径，也为个人未来发展提供了更多选择。
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========== 右侧边栏 ========== -->
+    <aside class="sidebar">
+        <div class="sidebar-card">
+            <div class="sidebar-title">📋 内容导航</div>
+            <a class="sidebar-item" href="#module-trend" onclick="event.preventDefault(); document.getElementById('module-trend').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">📈</div>
+                <div class="sidebar-text">
+                    <strong>趋势数据</strong>
+                    八大院校近五年内地本科生入学走势
+                </div>
+            </a>
+            <a class="sidebar-item" href="#module-policy" onclick="event.preventDefault(); document.getElementById('module-policy').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">📜</div>
+                <div class="sidebar-text">
+                    <strong>政策解读</strong>
+                    非本地生招生上限调整至40%-50%
+                </div>
+            </a>
+            <a class="sidebar-item" href="#module-case" onclick="event.preventDefault(); document.getElementById('module-case').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">🎓</div>
+                <div class="sidebar-text">
+                    <strong>个案访谈</strong>
+                    浸会大学新设专业扩招受益者
+                </div>
+            </a>
+            <a class="sidebar-item" href="#module-survey" onclick="event.preventDefault(); document.getElementById('module-survey').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">📊</div>
+                <div class="sidebar-text">
+                    <strong>调研分析</strong>
+                    107份问卷揭示21项影响因素
+                </div>
+            </a>
+            <a class="sidebar-item" href="#module-analysis" onclick="event.preventDefault(); document.getElementById('module-analysis').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">🔍</div>
+                <div class="sidebar-text">
+                    <strong>深度分析</strong>
+                    四大核心驱动力拆解
+                </div>
+            </a>
+            <a class="sidebar-item" href="#module-career" onclick="event.preventDefault(); document.getElementById('module-career').scrollIntoView({behavior:'smooth', block:'start'})">
+                <div class="sidebar-icon">🌐</div>
+                <div class="sidebar-text">
+                    <strong>毕业去向</strong>
+                    港大2024届非本地生发展路径
+                </div>
+            </a>
+        </div>
+
+        <div class="sidebar-card">
+            <div class="sidebar-title">📌 关键数据</div>
+            <div class="key-stats">
+                <div class="stat-box">
+                    <div class="stat-number">4,284</div>
+                    <div class="stat-label">2024/25学年<br>内地本科生总数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">50%</div>
+                    <div class="stat-label">2026/27起<br>非本地生招生上限</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">107</div>
+                    <div class="stat-label">有效问卷<br>样本量</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">8/8</div>
+                    <div class="stat-label">港校进入<br>亚洲百强</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-card">
+            <div class="sidebar-title">🏫 涉及院校</div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#003f5c; color:white;">港</div>
+                <div class="sidebar-text"><strong>香港大学</strong> HKU</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#2b6e9e; color:white;">中</div>
+                <div class="sidebar-text"><strong>香港中文大学</strong> CUHK</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#4c8cae; color:white;">科</div>
+                <div class="sidebar-text"><strong>香港科技大学</strong> HKUST</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#e84a2f; color:white;">理</div>
+                <div class="sidebar-text"><strong>香港理工大学</strong> PolyU</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#00a8a8; color:white;">城</div>
+                <div class="sidebar-text"><strong>香港城市大学</strong> CityU</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#f39c12; color:white;">浸</div>
+                <div class="sidebar-text"><strong>香港浸会大学</strong> HKBU</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#2c7a47; color:white;">教</div>
+                <div class="sidebar-text"><strong>香港教育大学</strong> EdUHK</div>
+            </div>
+            <div class="sidebar-item" style="cursor:default;">
+                <div class="sidebar-icon" style="background:#9b59b6; color:white;">岭</div>
+                <div class="sidebar-text"><strong>岭南大学</strong> Lingnan</div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<footer></footer>
+
+<script>
+    // ========== 滚动进度与动画 ==========
+    (function() {
+        const progressBar = document.getElementById('reading-progress-bar');
+    const overallRing = document.getElementById('overallRing');
+    const overallRingText = document.getElementById('overallRingText');
+    const chartRing = document.getElementById('chartRing');
+    const chartRingText = document.getElementById('chartRingText');
+    const moduleRing = document.getElementById('moduleRing');
+    const moduleRingText = document.getElementById('moduleRingText');
+    
+    // 中屏元素
+    const miniRing = document.getElementById('miniRing');
+    const miniRingText = document.getElementById('miniRingText');
+    const miniDetail = document.getElementById('miniDetail');
+    
+    // 小屏元素
+    const bottomFill = document.getElementById('bottomFill');
+    const bottomText = document.getElementById('bottomText');
+    
+    const chartSections = document.querySelectorAll('[data-section="chart"]');
+    const fadeElements = document.querySelectorAll('.fade-in');
+    
+    const circumference = 2 * Math.PI * 35;
+    const miniCircumference = 2 * Math.PI * 18;
+    
+    function setRingProgress(ring, percent, circum) {
+        const c = circum || circumference;
+        const offset = c - (percent / 100) * c;
+        ring.style.strokeDashoffset = offset;
+        if (percent >= 100) {
+            ring.classList.add('complete');
+        } else {
+            ring.classList.remove('complete');
+        }
+    }
+    
+    function updateProgress() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        
+        // 顶部进度条
+        progressBar.style.width = scrollPercent + '%';
+        
+        // 图表进度
+        let chartsViewed = 0;
+        chartSections.forEach(sec => {
+            const rect = sec.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.7) chartsViewed++;
+        });
+        const chartProgress = (chartsViewed / chartSections.length) * 100;
+        
+        // 模块进度
+        let modulesViewed = 0;
+        const moduleIds = ['module-trend','module-policy','module-case','module-survey','module-analysis','module-career'];
+        moduleIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.7) modulesViewed++;
+            }
+        });
+        const moduleProgress = (modulesViewed / moduleIds.length) * 100;
+        
+        // 控制面板显示/隐藏（滚动到趋势模块后才显示）
+        const trendModule = document.getElementById('module-trend');
+        const sideProgress = document.getElementById('sideProgress');
+        const sideProgressMini = document.getElementById('sideProgressMini');
+        const bottomProgress = document.getElementById('bottomProgress');
+        
+        if (trendModule) {
+            const trendRect = trendModule.getBoundingClientRect();
+            const shouldShow = trendRect.top < window.innerHeight * 0.5;
+            
+            if (sideProgress) {
+                if (shouldShow) sideProgress.classList.add('visible');
+                else sideProgress.classList.remove('visible');
+            }
+            if (sideProgressMini) {
+                if (shouldShow) sideProgressMini.classList.add('visible');
+                else sideProgressMini.classList.remove('visible');
+            }
+            if (bottomProgress) {
+                if (shouldShow) bottomProgress.classList.add('visible');
+                else bottomProgress.classList.remove('visible');
+            }
+        }
+        
+        // 更新大屏环形进度
+        if (overallRing) {
+            setRingProgress(overallRing, scrollPercent);
+            overallRingText.textContent = Math.round(scrollPercent) + '%';
+        }
+        if (chartRing) {
+            setRingProgress(chartRing, chartProgress);
+            chartRingText.textContent = chartsViewed + '/' + chartSections.length;
+        }
+        if (moduleRing) {
+            setRingProgress(moduleRing, moduleProgress);
+            moduleRingText.textContent = modulesViewed + '/' + moduleIds.length;
+        }
+        
+        // 更新中屏迷你进度
+        if (miniRing) {
+            setRingProgress(miniRing, scrollPercent, miniCircumference);
+            miniRingText.textContent = Math.round(scrollPercent) + '%';
+        }
+        if (miniDetail) {
+            miniDetail.textContent = '图表 ' + chartsViewed + '/' + chartSections.length + ' · 模块 ' + modulesViewed + '/' + moduleIds.length;
+        }
+        
+        // 更新小屏底部进度
+        if (bottomFill) {
+            bottomFill.style.width = scrollPercent + '%';
+        }
+        if (bottomText) {
+            bottomText.textContent = Math.round(scrollPercent) + '%';
+        }
+        
+        // 淡入动画
+        fadeElements.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.85) {
+                el.classList.add('visible');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+})();
+
+
+    // ========== 1. 折线图 ==========
+    const yearsLine = ['2020/21', '2021/22', '2022/23', '2023/24', '2024/25'];
+    const uniData = {
+        '香港大学': [513, 776, 792, 616, 815],
+        '香港中文大学': [322, 403, 426, 430, 557],
+        '香港科技大学': [253, 248, 241, 281, 348],
+        '香港理工大学': [559, 654, 698, 686, 1313],
+        '香港城市大学': [370, 295, 274, 275, 389],
+        '香港浸会大学': [170, 154, 219, 214, 416],
+        '香港教育大学': [62, 99, 89, 111, 242],
+        '岭南大学': [74, 90, 125, 136, 204]
+    };
+    const seriesList = Object.keys(uniData).map(name => ({ name, data: uniData[name] }));
+    const lineColors = {
+        '香港大学': '#003f5c', '香港中文大学': '#2b6e9e', '香港科技大学': '#4c8cae',
+        '香港理工大学': '#e84a2f', '香港城市大学': '#00a8a8', '香港浸会大学': '#f39c12',
+        '香港教育大学': '#2c7a47', '岭南大学': '#9b59b6'
+    };
+    const lineChart = echarts.init(document.getElementById('trend-line-chart'));
+    lineChart.setOption({
+        tooltip: { trigger: 'axis' },
+        legend: { 
+            type: 'scroll', 
+            orient: 'horizontal', 
+            left: 'center', 
+            top: 0, 
+            itemWidth: 40, 
+            textStyle: { color: '#1e4663', fontSize: 13 },
+            pageIconColor: '#2b6e9e',
+            pageTextStyle: { color: '#5e7a93' }
+        },
+        grid: { left: '8%', right: '7%', top: '16%', bottom: '5%', containLabel: true },
+        xAxis: { type: 'category', data: yearsLine, name: '学年', nameTextStyle: { fontSize: 13 } },
+        yAxis: { type: 'value', name: '内地本科生入学人数 (人)', nameLocation: 'middle', nameGap: 50, nameTextStyle: { fontSize: 13 } },
+        series: seriesList.map(item => ({
+            name: item.name, type: 'line', data: item.data, smooth: false, symbol: 'circle', symbolSize: 7,
+            lineStyle: { width: 2.8, color: lineColors[item.name] }, itemStyle: { color: lineColors[item.name] }, emphasis: { focus: 'series' }
+        }))
+    });
+
+    // ========== 2. 堆叠柱状图 ==========
+    const stackedYears = ['2020/21', '2021/22', '2022/23', '2023/24', '2024/25'];
+    const localStudents = [20288, 20732, 21165, 21487, 21221];
+    const mainlandStudents = [2323, 2719, 2864, 2749, 4284];
+    const internationalStudents = [1114, 1123, 1120, 1126, 1477];
+    const stackedChart = echarts.init(document.getElementById('policy-stacked-bar'));
+    stackedChart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(params) {
+            let total = 0;
+            let result = params[0].axisValue + '<br/>';
+            for (let p of params) {
+                result += `${p.marker} ${p.seriesName}: ${p.value} 人<br/>`;
+                total += p.value;
+            }
+            result += `<strong>总计: ${total} 人</strong>`;
+            return result;
+        } },
+        legend: { data: ['中国内地学生', '本地学生', '其他国际学生'], left: 'left', top: 0, textStyle: { fontSize: 13 } },
+        grid: { left: '8%', right: '5%', top: '14%', bottom: '5%', containLabel: true },
+        xAxis: { type: 'category', data: stackedYears, name: '学年', axisLabel: { rotate: 0, fontSize: 12 } },
+        yAxis: { type: 'value', name: '学生人数 (人)', nameLocation: 'middle', nameGap: 50, nameTextStyle: { fontSize: 13 } },
+        series: [
+            { name: '中国内地学生', type: 'bar', stack: 'total', data: mainlandStudents, itemStyle: { color: '#e84a2f', borderRadius: [0,0,0,0] }, label: { show: true, position: 'inside', formatter: '{c}', fontSize: 11 } },
+            { name: '本地学生', type: 'bar', stack: 'total', data: localStudents, itemStyle: { color: '#2b6e9e' }, label: { show: true, position: 'inside', formatter: '{c}', fontSize: 11 } },
+            { name: '其他国际学生', type: 'bar', stack: 'total', data: internationalStudents, itemStyle: { color: '#6aa9c9' }, label: { show: true, position: 'inside', formatter: '{c}', fontSize: 11 } }
+        ],
+    });
+
+    // ========== 3. 雷达图 ==========
+    (function() {
+        const factors = [
+            { name: "签证风险", score: 1.96, desc: "担心欧美留学签证收紧或被拒签（如针对理工科的限制）" },
+            { name: "人身安全", score: 3.05, desc: "担心欧美社会的治安、枪支问题及针对亚裔的歧视/仇恨犯罪" },
+            { name: "国际关系", score: 3.09, desc: "地缘政治紧张（如中美关系）导致对海外留学环境的不确定感" },
+            { name: "距离与往返", score: 3.54, desc: "距离家乡近，无时差，方便随时往返" },
+            { name: "学术排名", score: 3.39, desc: "香港「八大」在世界大学排名（QS/THE）中的高认可度" },
+            { name: "学制优势", score: 3.49, desc: "与国际接轨的全英文教学环境，且本科学制稳定" },
+            { name: "升学跳板", score: 3.79, desc: "希望以香港本科作为背景，未来更容易申请顶尖名校的硕博" },
+            { name: "师资力量", score: 3.55, desc: "看重香港高校引进的世界级教授团队及学术资源" },
+            { name: "留学成本", score: 3.51, desc: "相较于英美，香港的学费及生活费综合性价比较高" },
+            { name: "奖学金机会", score: 2.53, desc: "香港高校提供的各类入学奖学金或专项资助" },
+            { name: "留港政策", score: 3.53, desc: "香港政府推出的「高才通」、IANG签证等吸引人才留港就业的政策" },
+            { name: "永久居留权", score: 3.87, desc: "考虑到在港就学加就业满七年可获得香港永久居民身份" },
+            { name: "大湾区机遇", score: 3.53, desc: "看好粤港澳大湾区的融合发展及对香港毕业生的就业扶持" },
+            { name: "文化认同", score: 3.40, desc: "饮食习惯、文化背景与内地相似，适应压力较小" },
+            { name: "内地就业优势", score: 3.06, desc: "认为香港学历在国内大厂、公务员考录中具备竞争力" },
+            { name: "社交圈层", score: 3.06, desc: "留港内地学生群体庞大，更容易建立人脉与社交圈" },
+            { name: "「小红书/知乎」效应", score: 2.48, desc: "被社交平台上的「留港生活、求职攻略」所吸引" },
+            { name: "信息透明度", score: 2.89, desc: "认为香港院校的信息申请流程比国外更透明、更符合内地生的习惯" },
+            { name: "圈层推荐", score: 2.74, desc: "身边同学、亲戚或学长姐的成功案例，形成的「口碑传播」" },
+            { name: "家长意愿", score: 3.34, desc: "父母出于安全、距离考量，强烈建议或要求选择香港" },
+            { name: "未来支援", score: 3.13, desc: "考虑到家庭在内地/大湾区的人脉资源，在香港读书更容易衔接" }
+        ];
+        const maxValue = 5;
+        const dom = document.getElementById('radarChart');
+        if (!dom) return;
+        const myChart = echarts.init(dom);
+        const indicator = factors.map(f => ({ name: f.name, max: maxValue }));
+        const mainSeries = {
+            name: '背景线',
+            type: 'radar',
+            data: [{
+                value: factors.map(f => f.score),
+                areaStyle: { color: 'rgba(33, 110, 142, 0.16)' },
+                lineStyle: { color: '#1f7a9e', width: 2.5 },
+                itemStyle: { color: '#2c8daf', borderWidth: 2, borderColor: '#ffffff' },
+                tooltip: { show: false }
+            }],
+            symbol: 'none'
+        };
+        const pointSeries = factors.map((f, idx) => ({
+            name: f.name,
+            type: 'radar',
+            data: [{ value: factors.map((_, i) => i === idx ? f.score : null) }],
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: {
+                color: '#2c8daf',
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                shadowBlur: 3
+            },
+            emphasis: {
+                itemStyle: {
+                    color: '#e68a2e',
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    scale: 1.2
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: () => `
+                    <div style="font-weight:700;font-size:14px;margin-bottom:6px;">📌 ${f.name}</div>
+                    <div style="font-size:12px;line-height:1.45;color:#e0e7f0;margin-bottom:8px;max-width:280px;">${f.desc}</div>
+                    <div style="font-size:13px;display:flex;align-items:baseline;gap:8px;border-top:1px solid rgba(255,255,255,0.2);padding-top:6px;">
+                        <span>⭐ 平均得分</span>
+                        <strong style="font-size:18px;color:#ffb347;">${f.score.toFixed(2)}</strong>
+                        <span style="color:#9bb7d4;">/ 5.00</span>
+                    </div>
+                `,
+                backgroundColor: 'rgba(26, 32, 44, 0.96)',
+                borderColor: '#6c8db0',
+                borderWidth: 0.8,
+                textStyle: { color: '#f0f3f8', fontSize: 12 },
+                extraCssText: 'box-shadow:0 8px 20px rgba(0,0,0,0.25);border-radius:20px;padding:10px 16px;backdrop-filter:blur(2px);'
+            }
+        }));
+        const option = {
+            tooltip: { trigger: 'item' },
+            radar: {
+                indicator,
+                shape: 'circle',
+                center: ['50%', '50%'],
+                radius: '68%',
+                name: {
+                    textStyle: {
+                        color: '#1e3a5f',
+                        fontSize: 11,
+                        fontWeight: 500,
+                        backgroundColor: 'rgba(245, 249, 252, 0.8)',
+                        padding: [2, 4],
+                        borderRadius: 12
+                    }
+                },
+                splitArea: { areaStyle: { color: ['rgba(59,130,246,0.02)', 'rgba(59,130,246,0.01)'] } },
+                axisLine: { lineStyle: { color: 'rgba(51, 102, 153, 0.2)', width: 1 } },
+                splitLine: { lineStyle: { color: 'rgba(51, 102, 153, 0.2)', width: 0.8 } }
+            },
+            series: [mainSeries, ...pointSeries]
+        };
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+    })();
+
+    // ========== 4. 桑基图 ==========
+    const sankeyNodes = [
+        { name: '港大2024届非本地毕业生' },
+        { name: '直接就业' }, { name: '继续深造' }, { name: '其他' },
+        { name: '留港就业' }, { name: '返回内地就业' }, { name: '其他地区就业' },
+        { name: '留港深造' }, { name: '美国深造' }, { name: '英国深造' }, { name: '大陆深造' }, { name: '其他地区深造' }
+    ];
+    const sankeyLinks = [
+        { source: '港大2024届非本地毕业生', target: '直接就业', value: 50.8 },
+        { source: '港大2024届非本地毕业生', target: '继续深造', value: 41.9 },
+        { source: '港大2024届非本地毕业生', target: '其他', value: 7.3 },
+        { source: '直接就业', target: '留港就业', value: 74.1 },
+        { source: '直接就业', target: '返回内地就业', value: 10.0 },
+        { source: '直接就业', target: '其他地区就业', value: 15.9 },
+        { source: '继续深造', target: '留港深造', value: 57.8 },
+        { source: '继续深造', target: '美国深造', value: 17.8 },
+        { source: '继续深造', target: '英国深造', value: 12.8 },
+        { source: '继续深造', target: '大陆深造', value: 0.6 },
+        { source: '继续深造', target: '其他地区深造', value: 11.0 }
+    ];
+    const sankeyChart = echarts.init(document.getElementById('sankey-chart'));
+    sankeyChart.setOption({
+        tooltip: { trigger: 'item', formatter: (p) => p.dataType==='edge'? `${p.data.source} → ${p.data.target}<br/>占比: ${p.data.value}%` : p.name },
+        series: [{
+            type: 'sankey', layout: 'none', data: sankeyNodes, links: sankeyLinks,
+            nodeWidth: 28, nodeGap: 22, lineStyle: { color: 'gradient', curveness: 0.5 },
+            label: { fontSize: 11 }, emphasis: { focus: 'adjacency' }
+        }]
+    });
+
+    window.addEventListener('resize', () => {
+        lineChart.resize(); 
+        stackedChart.resize(); 
+        sankeyChart.resize();
+    });
+</script>
+</body>
+</html>
